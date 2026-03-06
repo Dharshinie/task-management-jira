@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 220 6% 96%;
+    --foreground: 214 20% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 214 20% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 20% 14%;
+
+    --primary: 214 100% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 6% 93%;
+    --secondary-foreground: 214 20% 14%;
+
+    --muted: 220 6% 90%;
+    --muted-foreground: 214 8% 46%;
+
+    --accent: 214 85% 95%;
+    --accent-foreground: 214 100% 40%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 218 11% 87%;
+    --input: 218 11% 87%;
+    --ring: 214 100% 40%;
+
+    --radius: 0.25rem;
+
+    --sidebar-bg: 0 0% 100%;
+    --sidebar-fg: 214 20% 14%;
+    --sidebar-hover: 220 6% 95%;
+    --sidebar-active: 214 85% 95%;
+    --sidebar-muted: 214 8% 46%;
+    --sidebar-width: 240px;
+
+    --navbar-height: 56px;
+
+    --kanban-todo: 220 6% 95%;
+    --kanban-progress: 214 85% 97%;
+    --kanban-done: 145 60% 96%;
+    --kanban-done-bar: 145 60% 45%;
+    --timeline-today: 36 100% 50%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 214 20% 14%;
+    --sidebar-primary: 214 100% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 85% 95%;
+    --sidebar-accent-foreground: 214 100% 40%;
+    --sidebar-border: 218 11% 87%;
+    --sidebar-ring: 214 100% 40%;
+
+    --header-bg: 0 0% 100%;
+    --header-fg: 214 20% 14%;
+    --header-hover: 220 6% 95%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-sm transition-colors;
+    color: hsl(var(--sidebar-fg));
+  }
+  .sidebar-link:hover {
+    background: hsl(var(--sidebar-hover));
+  }
+  .sidebar-link.active {
+    background: hsl(var(--sidebar-active));
+    color: hsl(var(--primary));
+    font-weight: 600;
+  }
+}

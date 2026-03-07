@@ -1,58 +1,79 @@
-<<<<<<< HEAD
-=======
+Jira Task Management System (Replication)
 
-**Use your preferred IDE**
+A modern Jira-inspired Task Management System built to replicate core project management features used in agile teams. This application allows users to manage projects, track tasks, and organize workflows efficiently with a clean and responsive UI.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+🚀 Tech Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
->>>>>>> 113e977 (firebase updation)
+React.js – Frontend library for building UI
 
-Follow these steps:
+TypeScript – Type-safe JavaScript development
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Vite – Fast build tool and development server
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Firebase – Backend services (database & authentication)
 
-# Step 3: Install the necessary dependencies.
-npm i
+Tailwind CSS – Utility-first CSS framework
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+shadcn/ui – Modern UI component library
+
+✨ Features
+
+Project dashboard similar to Jira
+
+Task creation and management
+
+Priority levels (Low, High, Highest)
+
+Responsive and modern UI
+
+Project settings panel
+
+Clean and structured layout inspired by Jira
+
+Firebase integration for data storage
+
+Fast development using Vite
+
+📂 Project Structure
+src/
+ ├── components
+ ├── hooks
+ ├── lib
+ ├── pages
+ ├── test
+ └── types
+ 
+ 
+⚙️ Installation
+
+Clone the repository
+
+git clone https://github.com/your-username/jira-task-management.git
+
+Navigate to project folder
+
+cd jira-task-management
+
+Install dependencies
+
+npm install
+
+Start development server
+
 npm run dev
-```
+🔥 Firebase Setup
 
-**Edit a file directly in GitHub**
+Create a Firebase project and add your configuration inside the project:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+firebaseConfig.ts
+🌐 Deployment
 
+The project can be deployed using platforms like Vercel or Firebase Hosting.
 
-## What technologies are used for this project?
+📌 Purpose of the Project
 
-This project is built with:
+This project was built as a learning and portfolio project to understand how real-world project management tools like Jira function and to practice building scalable frontend applications using modern technologies.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+👩‍💻 Author
 
-<<<<<<< HEAD
-Yes, you can!
-=======
-
-
-### Firebase connectivity
-
-The application is already wired to a Firestore database. You can find configuration in `src/firebase.js` and the database instance `db` is exported for use throughout the app. Tasks (and any other collections) are read from / written to the `tasks` collection. No authentication is required; the current Firestore rules allow open read/write through April 2026.
-
-To change the Firebase project, update the `firebaseConfig` object or use environment variables and reinitialize the app.
-
-If you add additional collections (projects, comments, etc.) simply import `db` and use the standard [Firebase Web SDK](https://firebase.google.com/docs/firestore/quickstart) methods.
->>>>>>> 113e977 (firebase updation)
-
-
+Dharshinie E

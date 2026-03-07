@@ -37,11 +37,17 @@ shadcn/ui – Modern UI component library
 <b>📂 Project Structure</b>
 
 src/
+
  ├── components
+ 
  ├── hooks
+ 
  ├── lib
+ 
  ├── pages
+ 
  ├── test
+ 
  └── types
  
  

@@ -3,7 +3,8 @@ import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { toast } from '@/hooks/use-toast';
 
 interface FormViewProps {
-  onAdd: (task: Omit<Task, 'id' | 'createdAt'>) => void;
+  // handler may perform async work (firestore writes) but callers don't need to await
+  onAdd: (task: Omit<Task, 'id' | 'createdAt'>) => void | Promise<void>;
 }
 
 export default function FormView({ onAdd }: FormViewProps) {

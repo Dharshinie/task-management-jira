@@ -7,9 +7,12 @@ import SummaryView from '@/components/views/SummaryView';
 import ListView from '@/components/views/ListView';
 import CalendarView from '@/components/views/CalendarView';
 import FormView from '@/components/views/FormView';
+import FeedbackView from '@/components/views/FeedbackView';
 import ReportsView from '@/components/views/ReportsView';
 import ProjectSettingsView from '@/components/views/ProjectSettingsView';
-import FeedbackView from '@/components/views/FeedbackView';
+import AdminDashboard from '@/views/AdminDashboard';
+import TLDashboard from '@/views/TLDashboard';
+import InternDashboard from '@/views/InternDashboard';
 import AddTaskDialog from '@/components/AddTaskDialog';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -32,6 +35,9 @@ const Index = () => {
       case 'reports': return <ReportsView tasks={taskStore.tasks} />;
       case 'settings': return <ProjectSettingsView />;
       case 'feedback': return <FeedbackView />;
+      case 'admin': return <AdminDashboard tasks={taskStore.tasks} />;
+      case 'tl': return <TLDashboard tasks={taskStore.tasks} />;
+      case 'intern': return <InternDashboard tasks={taskStore.tasks} />;
       default: return null;
     }
   };

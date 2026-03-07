@@ -5,7 +5,8 @@ import { TaskStatus, TaskPriority } from '@/types/task';
 interface AddTaskDialogProps {
   open: boolean;
   onClose: () => void;
-  onAdd: (task: { title: string; description: string; status: TaskStatus; projectId: string; assignee: string; dueDate: string; priority: TaskPriority }) => void;
+  // allow promise return since the store will write to Firestore
+  onAdd: (task: { title: string; description: string; status: TaskStatus; projectId: string; assignee: string; dueDate: string; priority: TaskPriority }) => void | Promise<void>;
 }
 
 export default function AddTaskDialog({ open, onClose, onAdd }: AddTaskDialogProps) {
@@ -44,7 +45,12 @@ export default function AddTaskDialog({ open, onClose, onAdd }: AddTaskDialogPro
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-medium text-foreground">Assignee</label>
-              <input value={assignee} onChange={(e) => setAssignee(e.target.value)} className={inputClass} placeholder="Name" />
+              <select value={assignee} onChange={(e) => setAssignee(e.target.value)} className={inputClass}>
+                <option value="">Unassigned</option>
+                <option value="Admin">Admin</option>
+                <option value="TL">TL</option>
+                <option value="Intern">Intern</option>
+              </select>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Due Date</label>

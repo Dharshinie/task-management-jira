@@ -41,6 +41,9 @@ const navMenus: { label: string; icon: React.ElementType; items: { label: string
     items: [
       { label: 'View all dashboards', desc: 'Browse dashboards', viewId: 'reports' },
       { label: 'Create dashboard', desc: 'Build a new dashboard', viewId: 'reports' },
+      { label: 'Admin Dashboard', desc: 'Administrative overview', viewId: 'admin' },
+      { label: 'TL Dashboard', desc: 'Team Lead overview', viewId: 'tl' },
+      { label: 'Intern Dashboard', desc: 'Intern tasks overview', viewId: 'intern' },
     ],
   },
   {
@@ -129,8 +132,8 @@ function ProfileDropdown({ onViewChange }: { onViewChange?: (view: string) => vo
       {open && (
         <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded shadow-lg z-50 py-1">
           <div className="px-4 py-3 border-b border-border">
-            <div className="text-sm font-semibold text-foreground">Alex Cooper</div>
-            <div className="text-xs text-muted-foreground">alex@company.com</div>
+            <div className="text-sm font-semibold text-foreground">Admin</div>
+            <div className="text-xs text-muted-foreground">admin@company.com</div>
           </div>
           <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors" onClick={() => setOpen(false)}>
             <User className="w-4 h-4 text-muted-foreground" />

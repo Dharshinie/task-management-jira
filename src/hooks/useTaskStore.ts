@@ -1,6 +1,18 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Task, TaskStatus } from '@/types/task';
+import { db } from '@/firebase';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
+  orderBy,
+} from 'firebase/firestore';
 
+// keep sample list for offline fallback; Firestore data will overwrite when available
 const SAMPLE_TASKS: Task[] = [
   {
     id: '1',
@@ -8,7 +20,7 @@ const SAMPLE_TASKS: Task[] = [
     description: 'Initialize the Git repo and configure CI/CD pipeline for the project.',
     status: 'todo',
     projectId: 'proj-1',
-    assignee: 'Alana Song',
+    assignee: 'Admin',
     dueDate: '2026-03-10',
     priority: 'highest',
     createdAt: '2026-03-01',
@@ -19,7 +31,7 @@ const SAMPLE_TASKS: Task[] = [
     description: 'Create ERD and define table relationships for the core data models.',
     status: 'todo',
     projectId: 'proj-1',
-    assignee: 'Alana Song',
+    assignee: 'TL',
     dueDate: '2026-03-12',
     priority: 'medium',
     createdAt: '2026-03-01',
@@ -30,7 +42,7 @@ const SAMPLE_TASKS: Task[] = [
     description: 'Add login, signup, and password reset flows with JWT tokens.',
     status: 'in-progress',
     projectId: 'proj-1',
-    assignee: 'Alana Song',
+    assignee: 'Intern',
     dueDate: '2026-03-08',
     priority: 'low',
     createdAt: '2026-02-28',
@@ -41,7 +53,7 @@ const SAMPLE_TASKS: Task[] = [
     description: 'Build REST API for CRUD operations on tasks and projects.',
     status: 'in-progress',
     projectId: 'proj-1',
-    assignee: 'Alana Song',
+    assignee: 'Admin',
     dueDate: '2026-03-15',
     priority: 'low',
     createdAt: '2026-03-02',
@@ -52,7 +64,7 @@ const SAMPLE_TASKS: Task[] = [
     description: 'Source imagery and create graphics for marketing materials.',
     status: 'in-progress',
     projectId: 'proj-1',
-    assignee: 'Alana Song',
+    assignee: 'TL',
     dueDate: '2026-03-03',
     priority: 'medium',
     createdAt: '2026-02-25',
@@ -63,7 +75,7 @@ const SAMPLE_TASKS: Task[] = [
     description: 'Finalize and submit the creative brief for approval.',
     status: 'done',
     projectId: 'proj-1',
-    assignee: 'Alana Song',
+    assignee: 'Intern',
     dueDate: '2026-02-28',
     priority: 'low',
     createdAt: '2026-02-20',
@@ -74,7 +86,7 @@ const SAMPLE_TASKS: Task[] = [
     description: 'Perform a comprehensive audit of the current user experience.',
     status: 'done',
     projectId: 'proj-1',
-    assignee: 'Alana Song',
+    assignee: 'Admin',
     dueDate: '2026-02-25',
     priority: 'low',
     createdAt: '2026-02-18',
@@ -82,25 +94,43 @@ const SAMPLE_TASKS: Task[] = [
 ];
 
 export function useTaskStore() {
-  const [tasks, setTasks] = useState<Task[]>(SAMPLE_TASKS);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-  const addTask = useCallback((task: Omit<Task, 'id' | 'createdAt'>) => {
-    const newTask: Task = {
+  // subscribe to Firestore collection and keep local state in sync
+  useEffect(() => {
+    const col = collection(db, 'tasks');
+    const q = query(col, orderBy('createdAt', 'asc'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const data: Task[] = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Task, 'id'>),
+      }));
+      if (data.length === 0) {
+        // if Firestore is empty fall back to sample
+        setTasks(SAMPLE_TASKS);
+      } else {
+        setTasks(data);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const addTask = useCallback(async (task: Omit<Task, 'id' | 'createdAt'>) => {
+    const newTask = {
       ...task,
-      id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    setTasks((prev) => [...prev, newTask]);
+    await addDoc(collection(db, 'tasks'), newTask);
   }, []);
 
-  const updateTaskStatus = useCallback((taskId: string, status: TaskStatus) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, status } : t))
-    );
+  const updateTaskStatus = useCallback(async (taskId: string, status: TaskStatus) => {
+    const ref = doc(db, 'tasks', taskId);
+    await updateDoc(ref, { status });
   }, []);
 
-  const deleteTask = useCallback((taskId: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+  const deleteTask = useCallback(async (taskId: string) => {
+    const ref = doc(db, 'tasks', taskId);
+    await deleteDoc(ref);
   }, []);
 
   const getTasksByStatus = useCallback(

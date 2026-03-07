@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderKanban, Settings, Users, BarChart3, Plus, CalendarRange, List, FileText, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Settings, Users, BarChart3, Plus, CalendarRange, List, FileText, MessageSquare, Shield, UserCog, GraduationCap } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const navItems = [
@@ -9,6 +9,9 @@ const navItems = [
   { icon: BarChart3, label: 'Timeline', id: 'timeline' },
   { icon: FileText, label: 'Form', id: 'form' },
   { icon: Users, label: 'Reports', id: 'reports' },
+  { icon: Shield, label: 'Admin', id: 'admin' },
+  { icon: UserCog, label: 'TL', id: 'tl' },
+  { icon: GraduationCap, label: 'Intern', id: 'intern' },
 ];
 
 interface AppSidebarProps {
@@ -23,7 +26,7 @@ export default function AppSidebar({ activeView, onViewChange }: AppSidebarProps
     // Bottom tab bar for mobile
     return (
       <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border flex items-center justify-around z-30 h-14">
-        {navItems.slice(0, 5).map((item) => (
+        {navItems.slice(0, 7).map((item) => (
           <button
             key={item.id}
             onClick={() => onViewChange(item.id)}

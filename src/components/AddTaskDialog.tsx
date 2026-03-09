@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { TaskStatus, TaskPriority } from '@/types/task';
+import { TaskStatus, TaskPriority, Task } from '@/types/task';
 
 interface AddTaskDialogProps {
   open: boolean;
   onClose: () => void;
   // allow promise return since the store will write to Firestore
-  onAdd: (task: { title: string; description: string; status: TaskStatus; projectId: string; assignee: string; dueDate: string; priority: TaskPriority }) => void | Promise<void>;
+  onAdd: (task: Omit<Task, 'id' | 'createdAt' | 'userId'>) => void | Promise<void>;
 }
 
 export default function AddTaskDialog({ open, onClose, onAdd }: AddTaskDialogProps) {
@@ -20,8 +20,26 @@ export default function AddTaskDialog({ open, onClose, onAdd }: AddTaskDialogPro
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    onAdd({ title, description, status, projectId: 'proj-1', assignee: assignee || 'Unassigned', dueDate, priority });
-    setTitle(''); setDescription(''); setAssignee(''); setDueDate(''); setStatus('todo'); setPriority('medium');
+    
+    const newTask: Omit<Task, 'id' | 'createdAt' | 'userId'> = {
+      title,
+      description,
+      status,
+      projectId: 'proj-1',
+      assignee: assignee || 'Unassigned',
+      dueDate,
+      priority,
+    };
+    
+    onAdd(newTask);
+    
+    // Reset form
+    setTitle('');
+    setDescription('');
+    setAssignee('');
+    setDueDate('');
+    setStatus('todo');
+    setPriority('medium');
     onClose();
   }
 

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings, Briefcase, Filter, LayoutDashboard, Users, AppWindow, Menu, X } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import jiraLogo from '@/assets/jira-logo.png';
 
 interface NavbarProps {
@@ -54,14 +55,14 @@ const navMenus: { label: string; icon: React.ElementType; items: { label: string
       { label: 'Invite people', desc: 'Add new team members', viewId: 'settings' },
     ],
   },
-  {
-    label: 'Apps',
-    icon: AppWindow,
-    items: [
-      { label: 'Explore apps', desc: 'Find new integrations' },
-      { label: 'Manage apps', desc: 'Configure installed apps' },
-    ],
-  },
+  //{
+    //label: 'Apps',
+   // icon: AppWindow,
+   // items: [
+      //{ label: 'Explore apps', desc: 'Find new integrations' },
+      //{ label: 'Manage apps', desc: 'Configure installed apps' },
+    //],
+  //},
 ];
 
 function NavDropdown({ menu, onViewChange }: { menu: typeof navMenus[0]; onViewChange?: (view: string) => void }) {
@@ -110,6 +111,7 @@ function ProfileDropdown({ onViewChange }: { onViewChange?: (view: string) => vo
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -119,21 +121,29 @@ function ProfileDropdown({ onViewChange }: { onViewChange?: (view: string) => vo
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
+
+  if (!user) return null;
 
   return (
     <div ref={ref} className="relative">
       <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-transparent hover:ring-header-foreground/30 transition-all" onClick={() => setOpen(!open)}>
-        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">AC</AvatarFallback>
+        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+          {user.email?.charAt(0).toUpperCase() || 'U'}
+        </AvatarFallback>
       </Avatar>
       {open && (
         <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded shadow-lg z-50 py-1">
           <div className="px-4 py-3 border-b border-border">
-            <div className="text-sm font-semibold text-foreground">Admin</div>
-            <div className="text-xs text-muted-foreground">admin@company.com</div>
+            <div className="text-sm font-semibold text-foreground">{user.displayName || 'User'}</div>
+            <div className="text-xs text-muted-foreground">{user.email}</div>
           </div>
           <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors" onClick={() => setOpen(false)}>
             <User className="w-4 h-4 text-muted-foreground" />

@@ -20,24 +20,37 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const Index = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeView, setActiveView] = useState('board');
-  const taskStore = useTaskStore();
+  const { tasks, addTask, updateTaskStatus, deleteTask, isLoading, error } = useTaskStore();
   const isMobile = useIsMobile();
 
   const renderView = () => {
+    if (isLoading) {
+      return <div className="flex items-center justify-center h-96">Loading tasks...</div>;
+    }
+
+    if (error) {
+      return (
+        <div className="p-4 bg-destructive/10 border border-destructive/30 rounded text-destructive">
+          <p className="font-medium">Error loading tasks</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      );
+    }
+
     switch (activeView) {
-      case 'summary': return <SummaryView tasks={taskStore.tasks} />;
-      case 'list': return <ListView tasks={taskStore.tasks} onDeleteTask={taskStore.deleteTask} onUpdateStatus={taskStore.updateTaskStatus} />;
-      case 'board': return <KanbanBoard taskStore={taskStore} />;
-      case 'calendar': return <CalendarView tasks={taskStore.tasks} />;
-      case 'timeline': return <TimelineView tasks={taskStore.tasks} />;
+      case 'summary': return <SummaryView tasks={tasks} />;
+      case 'list': return <ListView tasks={tasks} onDeleteTask={deleteTask} onUpdateStatus={updateTaskStatus} />;
+      case 'board': return <KanbanBoard taskStore={{ tasks, addTask, updateTaskStatus, deleteTask, getTasksByStatus: (status) => tasks.filter(t => t.status === status) }} />;
+      case 'calendar': return <CalendarView tasks={tasks} />;
+      case 'timeline': return <TimelineView tasks={tasks} />;
       case 'form':
-      case 'add-item': return <FormView onAdd={taskStore.addTask} />;
-      case 'reports': return <ReportsView tasks={taskStore.tasks} />;
+      case 'add-item': return <FormView onAdd={addTask} />;
+      case 'reports': return <ReportsView tasks={tasks} />;
       case 'settings': return <ProjectSettingsView />;
       case 'feedback': return <FeedbackView />;
-      case 'admin': return <AdminDashboard tasks={taskStore.tasks} />;
-      case 'tl': return <TLDashboard tasks={taskStore.tasks} />;
-      case 'intern': return <InternDashboard tasks={taskStore.tasks} />;
+      case 'admin': return <AdminDashboard tasks={tasks} />;
+      case 'tl': return <TLDashboard tasks={tasks} />;
+      case 'intern': return <InternDashboard tasks={tasks} />;
       default: return null;
     }
   };
@@ -54,7 +67,7 @@ const Index = () => {
       <AddTaskDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        onAdd={taskStore.addTask}
+        onAdd={addTask}
       />
     </div>
   );

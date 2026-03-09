@@ -12,6 +12,7 @@ export interface Task {
   priority: TaskPriority;
   attachmentURL?: string;
   createdAt: string;
+  userId: string;
 }
 
 export interface Column {

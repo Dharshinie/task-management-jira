@@ -33,7 +33,7 @@ const navMenus: { label: string; icon: React.ElementType; items: { label: string
     icon: Filter,
     items: [
       { label: 'View all filters', desc: 'See saved filters', viewId: 'list' },
-      { label: 'Create filter', desc: 'Create a new filter', viewId: 'list' },
+      { label: 'Create filter', desc: 'Create a new filter', viewId: 'create-filter' },
     ],
   },
   {
@@ -41,7 +41,7 @@ const navMenus: { label: string; icon: React.ElementType; items: { label: string
     icon: LayoutDashboard,
     items: [
       { label: 'View all dashboards', desc: 'Browse dashboards', viewId: 'reports' },
-      { label: 'Create dashboard', desc: 'Build a new dashboard', viewId: 'reports' },
+      { label: 'Create dashboard', desc: 'Build a new dashboard', viewId: 'create-dashboard' },
       { label: 'Admin Dashboard', desc: 'Administrative overview', viewId: 'admin' },
       { label: 'TL Dashboard', desc: 'Team Lead overview', viewId: 'tl' },
       { label: 'Intern Dashboard', desc: 'Intern tasks overview', viewId: 'intern' },
@@ -217,10 +217,18 @@ export default function Navbar({ onAddTask, onViewChange }: NavbarProps) {
             Create
           </button>
 
-          <button className="p-2 rounded-sm hover:bg-header-hover transition-colors hidden sm:block">
+          <button
+            className="p-2 rounded-sm hover:bg-header-hover transition-colors hidden sm:block"
+            onClick={() => onViewChange?.('help')}
+            aria-label="Open help"
+          >
             <HelpCircle className="w-[18px] h-[18px] text-header-foreground/80" />
           </button>
-          <button className="p-2 rounded-sm hover:bg-header-hover transition-colors relative">
+          <button
+            className="p-2 rounded-sm hover:bg-header-hover transition-colors relative"
+            onClick={() => onViewChange?.('notifications')}
+            aria-label="Open notifications"
+          >
             <Bell className="w-[18px] h-[18px] text-header-foreground/80" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full ring-2 ring-header" />
           </button>

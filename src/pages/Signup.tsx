@@ -3,11 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UserRole } from '@/types/user';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<UserRole>('intern');
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState('');
   const { signup, error: authError } = useAuth();
@@ -30,13 +33,13 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      await signup(email, password);
+      await signup(email, password, role);
       toast({
         title: "Success",
         description: "Account created successfully",
       });
       navigate('/');
-    } catch (error: any) {
+    } catch (error: Error) {
       // Error is already set in AuthContext - just show the toast
       toast({
         title: "Error",
@@ -110,6 +113,19 @@ export default function Signup() {
                 className="w-full px-3 py-2 text-sm border border-input rounded-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">Role</label>
+              <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="tl">Team Lead</SelectItem>
+                  <SelectItem value="intern">Intern</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <button
               type="submit"

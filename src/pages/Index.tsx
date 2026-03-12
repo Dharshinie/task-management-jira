@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppSidebar from '@/components/AppSidebar';
 import Navbar from '@/components/Navbar';
 import KanbanBoard from '@/components/KanbanBoard';
@@ -10,18 +10,50 @@ import FormView from '@/components/views/FormView';
 import FeedbackView from '@/components/views/FeedbackView';
 import ReportsView from '@/components/views/ReportsView';
 import ProjectSettingsView from '@/components/views/ProjectSettingsView';
+import CreateDashboardView from '@/components/views/CreateDashboardView';
+import NotificationsView from '@/components/views/NotificationsView';
+import HelpView from '@/components/views/HelpView';
 import AdminDashboard from '@/views/AdminDashboard';
 import TLDashboard from '@/views/TLDashboard';
 import InternDashboard from '@/views/InternDashboard';
 import AddTaskDialog from '@/components/AddTaskDialog';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeView, setActiveView] = useState('board');
   const { tasks, addTask, updateTaskStatus, deleteTask, isLoading, error } = useTaskStore();
   const isMobile = useIsMobile();
+  const { userProfile } = useAuth();
+
+  // Set default view based on role
+  useEffect(() => {
+    if (userProfile?.role) {
+      if (userProfile.role === 'admin') {
+        setActiveView('admin');
+      } else if (userProfile.role === 'tl') {
+        setActiveView('tl');
+      } else if (userProfile.role === 'intern') {
+        setActiveView('intern');
+      }
+    }
+  }, [userProfile]);
+
+  // Prevent access to role-restricted views
+  const isValidView = (view: string) => {
+    if (view === 'admin' && userProfile?.role !== 'admin') return false;
+    if (view === 'tl' && userProfile?.role !== 'tl') return false;
+    if (view === 'intern' && userProfile?.role !== 'intern') return false;
+    return true;
+  };
+
+  const handleViewChange = (view: string) => {
+    if (isValidView(view)) {
+      setActiveView(view);
+    }
+  };
 
   const renderView = () => {
     if (isLoading) {
@@ -40,16 +72,20 @@ const Index = () => {
     switch (activeView) {
       case 'summary': return <SummaryView tasks={tasks} />;
       case 'list': return <ListView tasks={tasks} onDeleteTask={deleteTask} onUpdateStatus={updateTaskStatus} />;
-      case 'board': return <KanbanBoard taskStore={{ tasks, addTask, updateTaskStatus, deleteTask, getTasksByStatus: (status) => tasks.filter(t => t.status === status) }} />;
+      case 'board': return <KanbanBoard taskStore={{ tasks, addTask, updateTaskStatus, deleteTask, getTasksByStatus: (status) => tasks.filter(t => t.status === status), isLoading, error }} />;
       case 'calendar': return <CalendarView tasks={tasks} />;
       case 'timeline': return <TimelineView tasks={tasks} />;
       case 'form':
       case 'add-item': return <FormView onAdd={addTask} />;
       case 'reports': return <ReportsView tasks={tasks} />;
+      case 'create-dashboard': return <CreateDashboardView onCreate={() => setActiveView('reports')} />;
+      case 'create-filter': return <ListView tasks={tasks} onDeleteTask={deleteTask} onUpdateStatus={updateTaskStatus} openFiltersOnLoad />;
+      case 'help': return <HelpView />;
+      case 'notifications': return <NotificationsView tasks={tasks} />;
       case 'settings': return <ProjectSettingsView />;
       case 'feedback': return <FeedbackView />;
       case 'admin': return <AdminDashboard tasks={tasks} />;
-      case 'tl': return <TLDashboard tasks={tasks} />;
+      case 'tl': return <TLDashboard tasks={tasks} addTask={addTask} />;
       case 'intern': return <InternDashboard tasks={tasks} />;
       default: return null;
     }
@@ -57,8 +93,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar onAddTask={() => setDialogOpen(true)} onViewChange={setActiveView} />
-      <AppSidebar activeView={activeView} onViewChange={setActiveView} />
+      <Navbar onAddTask={() => setDialogOpen(true)} onViewChange={handleViewChange} />
+      <AppSidebar activeView={activeView} onViewChange={handleViewChange} />
 
       <main className={`pt-[var(--navbar-height)] ${isMobile ? 'pb-16' : 'ml-[var(--sidebar-width)]'}`}>
         <div className="p-4 sm:p-6">{renderView()}</div>

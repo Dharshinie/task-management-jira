@@ -1,17 +1,18 @@
 import { LayoutDashboard, FolderKanban, Settings, Users, BarChart3, Plus, CalendarRange, List, FileText, MessageSquare, Shield, UserCog, GraduationCap } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 
-const navItems = [
-  { icon: LayoutDashboard, label: 'Summary', id: 'summary' },
-  { icon: List, label: 'List', id: 'list' },
-  { icon: FolderKanban, label: 'Board', id: 'board' },
-  { icon: CalendarRange, label: 'Calendar', id: 'calendar' },
-  { icon: BarChart3, label: 'Timeline', id: 'timeline' },
-  { icon: FileText, label: 'Form', id: 'form' },
-  { icon: Users, label: 'Reports', id: 'reports' },
-  { icon: Shield, label: 'Admin', id: 'admin' },
-  { icon: UserCog, label: 'TL', id: 'tl' },
-  { icon: GraduationCap, label: 'Intern', id: 'intern' },
+const allNavItems = [
+  { icon: LayoutDashboard, label: 'Summary', id: 'summary', roles: ['admin', 'tl'] },
+  { icon: List, label: 'List', id: 'list', roles: ['admin', 'tl', 'intern'] },
+  { icon: FolderKanban, label: 'Board', id: 'board', roles: ['admin', 'tl', 'intern'] },
+  { icon: CalendarRange, label: 'Calendar', id: 'calendar', roles: ['admin', 'tl'] },
+  { icon: BarChart3, label: 'Timeline', id: 'timeline', roles: ['admin', 'tl'] },
+  { icon: FileText, label: 'Form', id: 'form', roles: ['admin', 'tl'] },
+  { icon: Users, label: 'Reports', id: 'reports', roles: ['admin', 'tl'] },
+  { icon: Shield, label: 'Admin', id: 'admin', roles: ['admin'] },
+  { icon: UserCog, label: 'Team Lead', id: 'tl', roles: ['tl'] },
+  { icon: GraduationCap, label: 'My Dashboard', id: 'intern', roles: ['intern'] },
 ];
 
 interface AppSidebarProps {
@@ -21,6 +22,9 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
   const isMobile = useIsMobile();
+  const { userProfile } = useAuth();
+
+  const navItems = allNavItems.filter(item => item.roles.includes(userProfile?.role || 'intern'));
 
   if (isMobile) {
     // Bottom tab bar for mobile
@@ -71,14 +75,18 @@ export default function AppSidebar({ activeView, onViewChange }: AppSidebarProps
 
       {/* Bottom */}
       <div className="p-3 space-y-0.5 border-t border-sidebar-border">
-        <button onClick={() => onViewChange('add-item')} className={`sidebar-link w-full ${activeView === 'add-item' ? 'active' : 'opacity-80 hover:opacity-100'}`}>
-          <Plus className="w-[18px] h-[18px]" />
-          Add item
-        </button>
-        <button onClick={() => onViewChange('settings')} className={`sidebar-link w-full ${activeView === 'settings' ? 'active' : 'opacity-80 hover:opacity-100'}`}>
-          <Settings className="w-[18px] h-[18px]" />
-          Project settings
-        </button>
+        {(userProfile?.role === 'admin' || userProfile?.role === 'tl') && (
+          <>
+            <button onClick={() => onViewChange('add-item')} className={`sidebar-link w-full ${activeView === 'add-item' ? 'active' : 'opacity-80 hover:opacity-100'}`}>
+              <Plus className="w-[18px] h-[18px]" />
+              Add item
+            </button>
+            <button onClick={() => onViewChange('settings')} className={`sidebar-link w-full ${activeView === 'settings' ? 'active' : 'opacity-80 hover:opacity-100'}`}>
+              <Settings className="w-[18px] h-[18px]" />
+              Project settings
+            </button>
+          </>
+        )}
         <button onClick={() => onViewChange('feedback')} className={`sidebar-link w-full ${activeView === 'feedback' ? 'active' : 'opacity-80 hover:opacity-100'}`}>
           <MessageSquare className="w-[18px] h-[18px]" />
           Give feedback

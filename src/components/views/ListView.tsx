@@ -7,6 +7,7 @@ interface ListViewProps {
   tasks: Task[];
   onDeleteTask: (id: string) => void;
   onUpdateStatus: (id: string, status: TaskStatus) => void;
+  openFiltersOnLoad?: boolean;
 }
 
 type SortKey = 'title' | 'status' | 'assignee' | 'dueDate' | 'priority';
@@ -52,7 +53,7 @@ function StatusBadge({ status }: { status: TaskStatus }) {
   }
 }
 
-export default function ListView({ tasks, onDeleteTask, onUpdateStatus }: ListViewProps) {
+export default function ListView({ tasks, onDeleteTask, onUpdateStatus, openFiltersOnLoad = false }: ListViewProps) {
   const [sortKey, setSortKey] = useState<SortKey>('dueDate');
   const [sortAsc, setSortAsc] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -68,6 +69,12 @@ export default function ListView({ tasks, onDeleteTask, onUpdateStatus }: ListVi
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useEffect(() => {
+    if (openFiltersOnLoad) {
+      setFilterOpen(true);
+    }
+  }, [openFiltersOnLoad]);
 
   const uniqueAssignees = Array.from(new Set(tasks.map(t => t.assignee)));
 

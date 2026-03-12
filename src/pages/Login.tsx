@@ -22,7 +22,7 @@ export default function Login() {
         description: "Logged in successfully",
       });
       navigate('/');
-    } catch (error: any) {
+    } catch (error: Error) {
       // Error is already set in AuthContext
       toast({
         title: "Error",

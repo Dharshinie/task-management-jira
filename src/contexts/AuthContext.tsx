@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, AuthError } from 'firebase/auth';
-import { auth } from '../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
+import { UserProfile, UserRole } from '@/types/user';
 
 interface AuthContextType {
   user: User | null;
+  userProfile: UserProfile | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
   error: string | null;
@@ -44,12 +47,37 @@ const getErrorMessage = (error: AuthError): string => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      if (user) {
+        // Fetch user profile from Firestore
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            setUserProfile(userDoc.data() as UserProfile);
+          } else {
+            // If no profile, create one with default role (intern)
+            const profile: UserProfile = {
+              uid: user.uid,
+              email: user.email || '',
+              role: 'intern',
+              createdAt: new Date().toISOString(),
+            };
+            await setDoc(doc(db, 'users', user.uid), profile);
+            setUserProfile(profile);
+          }
+        } catch (err) {
+          console.error('Error fetching user profile:', err);
+          setUserProfile(null);
+        }
+      } else {
+        setUserProfile(null);
+      }
       setLoading(false);
       setError(null);
     });
@@ -61,18 +89,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setError(null);
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (err: any) {
+    } catch (err: AuthError) {
       const errorMsg = getErrorMessage(err);
       setError(errorMsg);
       throw new Error(errorMsg);
     }
   };
 
-  const signup = async (email: string, password: string) => {
+  const signup = async (email: string, password: string, role: UserRole) => {
     try {
       setError(null);
-      await createUserWithEmailAndPassword(auth, email, password);
-    } catch (err: any) {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Save user profile to Firestore
+      const profile: UserProfile = {
+        uid: user.uid,
+        email: user.email || '',
+        role,
+        createdAt: new Date().toISOString(),
+      };
+      await setDoc(doc(db, 'users', user.uid), profile);
+      setUserProfile(profile);
+    } catch (err: AuthError) {
       const errorMsg = getErrorMessage(err);
       setError(errorMsg);
       throw new Error(errorMsg);
@@ -83,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setError(null);
       await signOut(auth);
-    } catch (err: any) {
+    } catch (err: AuthError) {
       const errorMsg = getErrorMessage(err);
       setError(errorMsg);
       throw new Error(errorMsg);
@@ -92,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     user,
+    userProfile,
     login,
     signup,
     logout,

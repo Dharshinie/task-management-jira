@@ -13,6 +13,7 @@ import ProjectSettingsView from '@/components/views/ProjectSettingsView';
 import CreateDashboardView from '@/components/views/CreateDashboardView';
 import NotificationsView from '@/components/views/NotificationsView';
 import HelpView from '@/components/views/HelpView';
+import ProfileView from '@/components/views/ProfileView';
 import AdminDashboard from '@/views/AdminDashboard';
 import TLDashboard from '@/views/TLDashboard';
 import InternDashboard from '@/views/InternDashboard';
@@ -24,7 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const Index = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeView, setActiveView] = useState('board');
-  const { tasks, addTask, updateTaskStatus, deleteTask, isLoading, error } = useTaskStore();
+  const { tasks, addTask, updateTaskStatus, deleteTask, toggleStarTask, isLoading, error } = useTaskStore();
   const isMobile = useIsMobile();
   const { userProfile } = useAuth();
 
@@ -43,9 +44,11 @@ const Index = () => {
 
   // Prevent access to role-restricted views
   const isValidView = (view: string) => {
-    if (view === 'admin' && userProfile?.role !== 'admin') return false;
-    if (view === 'tl' && userProfile?.role !== 'tl') return false;
-    if (view === 'intern' && userProfile?.role !== 'intern') return false;
+    const role = userProfile?.role;
+    // Admins can access all dashboards; others only their own.
+    if (view === 'admin') return role === 'admin';
+    if (view === 'tl') return role === 'admin' || role === 'tl';
+    if (view === 'intern') return role === 'admin' || role === 'intern' || role === 'tl';
     return true;
   };
 
@@ -71,7 +74,16 @@ const Index = () => {
 
     switch (activeView) {
       case 'summary': return <SummaryView tasks={tasks} />;
-      case 'list': return <ListView tasks={tasks} onDeleteTask={deleteTask} onUpdateStatus={updateTaskStatus} />;
+      case 'list':
+        return (
+          <ListView
+            tasks={tasks}
+            onDeleteTask={deleteTask}
+            onUpdateStatus={updateTaskStatus}
+            onToggleStar={toggleStarTask}
+            onAddTask={() => setDialogOpen(true)}
+          />
+        );
       case 'board': return <KanbanBoard taskStore={{ tasks, addTask, updateTaskStatus, deleteTask, getTasksByStatus: (status) => tasks.filter(t => t.status === status), isLoading, error }} />;
       case 'calendar': return <CalendarView tasks={tasks} />;
       case 'timeline': return <TimelineView tasks={tasks} />;
@@ -79,11 +91,33 @@ const Index = () => {
       case 'add-item': return <FormView onAdd={addTask} />;
       case 'reports': return <ReportsView tasks={tasks} />;
       case 'create-dashboard': return <CreateDashboardView onCreate={() => setActiveView('reports')} />;
-      case 'create-filter': return <ListView tasks={tasks} onDeleteTask={deleteTask} onUpdateStatus={updateTaskStatus} openFiltersOnLoad />;
+      case 'create-filter':
+        return (
+          <ListView
+            tasks={tasks}
+            onDeleteTask={deleteTask}
+            onUpdateStatus={updateTaskStatus}
+            onToggleStar={toggleStarTask}
+            onAddTask={() => setDialogOpen(true)}
+            openFiltersOnLoad
+          />
+        );
+      case 'starred':
+        return (
+          <ListView
+            tasks={tasks}
+            onDeleteTask={deleteTask}
+            onUpdateStatus={updateTaskStatus}
+            onToggleStar={toggleStarTask}
+            onAddTask={() => setDialogOpen(true)}
+            showStarredOnly
+          />
+        );
       case 'help': return <HelpView />;
       case 'notifications': return <NotificationsView tasks={tasks} />;
       case 'settings': return <ProjectSettingsView />;
       case 'feedback': return <FeedbackView />;
+      case 'profile': return <ProfileView />;
       case 'admin': return <AdminDashboard tasks={tasks} />;
       case 'tl': return <TLDashboard tasks={tasks} addTask={addTask} />;
       case 'intern': return <InternDashboard tasks={tasks} />;

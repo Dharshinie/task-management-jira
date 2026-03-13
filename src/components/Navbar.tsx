@@ -17,7 +17,7 @@ const navMenus: { label: string; icon: React.ElementType; items: { label: string
     items: [
       { label: 'Recent projects', desc: 'View recently accessed projects', viewId: 'summary' },
       { label: 'Assigned to me', desc: 'Tasks assigned to you', viewId: 'list' },
-      { label: 'Starred', desc: 'Your starred items', viewId: 'list' },
+      { label: 'Starred', desc: 'Your starred items', viewId: 'starred' },
     ],
   },
   {
@@ -65,6 +65,27 @@ const navMenus: { label: string; icon: React.ElementType; items: { label: string
   //},
 ];
 
+function filterDashboardItemsByRole(role?: string) {
+  const dashboardsMenu = navMenus.find((menu) => menu.label === 'Dashboards');
+  if (!dashboardsMenu) return [];
+
+  // Show all dashboards for admins.
+  if (role === 'admin') return dashboardsMenu.items;
+
+  // Team leads can see TL + Intern dashboards, but not Admin.
+  if (role === 'tl') {
+    return dashboardsMenu.items.filter((item) => item.viewId !== 'admin');
+  }
+
+  // Interns only see Intern dashboard.
+  if (role === 'intern') {
+    return dashboardsMenu.items.filter((item) => item.viewId === 'intern' || item.viewId === 'reports' || item.viewId === 'create-dashboard');
+  }
+
+  // Default to showing all (fallback)
+  return dashboardsMenu.items;
+}
+
 function NavDropdown({ menu, onViewChange }: { menu: typeof navMenus[0]; onViewChange?: (view: string) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -111,7 +132,7 @@ function ProfileDropdown({ onViewChange }: { onViewChange?: (view: string) => vo
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, userProfile } = useAuth();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -144,8 +165,15 @@ function ProfileDropdown({ onViewChange }: { onViewChange?: (view: string) => vo
           <div className="px-4 py-3 border-b border-border">
             <div className="text-sm font-semibold text-foreground">{user.displayName || 'User'}</div>
             <div className="text-xs text-muted-foreground">{user.email}</div>
+            <div className="text-xs text-muted-foreground capitalize">Role: {userProfile?.role || 'Unknown'}</div>
           </div>
-          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors" onClick={() => setOpen(false)}>
+          <button
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
+            onClick={() => {
+              if (onViewChange) onViewChange('profile');
+              setOpen(false);
+            }}
+          >
             <User className="w-4 h-4 text-muted-foreground" />
             Profile
           </button>
@@ -172,6 +200,13 @@ function ProfileDropdown({ onViewChange }: { onViewChange?: (view: string) => vo
 
 export default function Navbar({ onAddTask, onViewChange }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { userProfile } = useAuth();
+  const role = userProfile?.role;
+
+  const dashboardItems = filterDashboardItemsByRole(role);
+  const filteredNavMenus = navMenus.map((menu) =>
+    menu.label === 'Dashboards' ? { ...menu, items: dashboardItems } : menu
+  );
 
   return (
     <>
@@ -190,7 +225,7 @@ export default function Navbar({ onAddTask, onViewChange }: NavbarProps) {
 
           {/* Nav menu items - desktop */}
           <nav className="hidden lg:flex items-center">
-            {navMenus.map((menu) => (
+            {filteredNavMenus.map((menu) => (
               <NavDropdown key={menu.label} menu={menu} onViewChange={onViewChange} />
             ))}
           </nav>
@@ -250,7 +285,7 @@ export default function Navbar({ onAddTask, onViewChange }: NavbarProps) {
                 className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-sm bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
-            {navMenus.map((menu) => (
+            {filteredNavMenus.map((menu) => (
               <div key={menu.label} className="border-b border-border pb-2 mb-2">
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">{menu.label}</div>
                 {menu.items.map(item => (

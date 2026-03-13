@@ -15,85 +15,7 @@ import {
 } from 'firebase/firestore';
 
 // keep sample list for offline fallback; Firestore data will overwrite when available
-const SAMPLE_TASKS: Omit<Task, 'id'>[] = [
-  {
-    title: 'Create pitch deck',
-    description: 'Initialize the Git repo and configure CI/CD pipeline for the project.',
-    status: 'todo',
-    projectId: 'proj-1',
-    assignee: 'Admin',
-    dueDate: '2026-03-10',
-    priority: 'highest',
-    createdAt: '2026-03-01',
-    userId: '',
-  },
-  {
-    title: 'Finish up review and feedback gathering',
-    description: 'Create ERD and define table relationships for the core data models.',
-    status: 'todo',
-    projectId: 'proj-1',
-    assignee: 'TL',
-    dueDate: '2026-03-12',
-    priority: 'medium',
-    createdAt: '2026-03-01',
-    userId: '',
-  },
-  {
-    title: 'Competitive analysis',
-    description: 'Add login, signup, and password reset flows with JWT tokens.',
-    status: 'in-progress',
-    projectId: 'proj-1',
-    assignee: 'Intern',
-    dueDate: '2026-03-08',
-    priority: 'low',
-    createdAt: '2026-02-28',
-    userId: '',
-  },
-  {
-    title: 'Gather information for website',
-    description: 'Build REST API for CRUD operations on tasks and projects.',
-    status: 'in-progress',
-    projectId: 'proj-1',
-    assignee: 'Admin',
-    dueDate: '2026-03-15',
-    priority: 'low',
-    createdAt: '2026-03-02',
-    userId: '',
-  },
-  {
-    title: 'Source and create images',
-    description: 'Source imagery and create graphics for marketing materials.',
-    status: 'in-progress',
-    projectId: 'proj-1',
-    assignee: 'TL',
-    dueDate: '2026-03-03',
-    priority: 'medium',
-    createdAt: '2026-02-25',
-    userId: '',
-  },
-  {
-    title: 'Submit creative brief',
-    description: 'Finalize and submit the creative brief for approval.',
-    status: 'done',
-    projectId: 'proj-1',
-    assignee: 'Intern',
-    dueDate: '2026-02-28',
-    priority: 'low',
-    createdAt: '2026-02-20',
-    userId: '',
-  },
-  {
-    title: 'Audit current experience',
-    description: 'Perform a comprehensive audit of the current user experience.',
-    status: 'done',
-    projectId: 'proj-1',
-    assignee: 'Admin',
-    dueDate: '2026-02-25',
-    priority: 'low',
-    createdAt: '2026-02-18',
-    userId: '',
-  },
-];
+const SAMPLE_TASKS: Omit<Task, 'id'>[] = [];
 
 export function useTaskStore() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -141,7 +63,7 @@ export function useTaskStore() {
                 dueDate: docData.dueDate || '',
                 priority: docData.priority || 'medium',
                 createdAt: docData.createdAt || new Date().toISOString(),
-                userId: docData.userId || '',
+                starred: docData.starred || false,
                 creatorId: docData.creatorId || undefined,
               } as Task;
             });
@@ -209,10 +131,11 @@ export function useTaskStore() {
           createdAt: new Date().toISOString(),
           creatorId: user.uid,
         };
-        // mirror the userId to assigneeId for easier querying if we ever
-        // need to filter by the field directly
+        // Firestore rejects undefined values; only set assigneeId when present.
         if (task.assigneeId) {
           newTask.assigneeId = task.assigneeId;
+        } else {
+          delete newTask.assigneeId;
         }
 
         console.log('Adding task:', newTask);
@@ -239,6 +162,20 @@ export function useTaskStore() {
     }
   }, []);
 
+  const toggleStarTask = useCallback(async (taskId: string) => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+      const ref = doc(db, 'tasks', taskId);
+      await updateDoc(ref, { starred: !task.starred });
+      console.log('Task starred toggled:', taskId);
+    } catch (err) {
+      console.error('Error toggling star:', err);
+      setError(String(err));
+      throw err;
+    }
+  }, [tasks]);
+
   const deleteTask = useCallback(async (taskId: string) => {
     try {
       const ref = doc(db, 'tasks', taskId);
@@ -256,5 +193,14 @@ export function useTaskStore() {
     [tasks]
   );
 
-  return { tasks, addTask, updateTaskStatus, deleteTask, getTasksByStatus, isLoading, error };
+  return {
+    tasks,
+    addTask,
+    updateTaskStatus,
+    toggleStarTask,
+    deleteTask,
+    getTasksByStatus,
+    isLoading,
+    error,
+  };
 }

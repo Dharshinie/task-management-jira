@@ -262,7 +262,6 @@ export default function TLDashboard({ tasks, addTask }: TLDashboardProps) {
         open={taskDialogOpen}
         onClose={() => setTaskDialogOpen(false)}
         onAdd={addTask}
-        users={teamMembers}
         projects={projects}
       />
     </div>

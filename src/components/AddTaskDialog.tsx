@@ -33,6 +33,7 @@ export default function AddTaskDialog(props: AddTaskDialogProps) {
   const [assignee, setAssignee] = useState('');
   const [assigneeId, setAssigneeId] = useState<string | undefined>(undefined);
   const [users, setUsers] = useState<UserProfile[]>(propUsers || []);
+  const [hasFetchedAllUsers, setHasFetchedAllUsers] = useState(false);
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState<TaskStatus>('todo');
   const [priority, setPriority] = useState<TaskPriority>('medium');
@@ -71,29 +72,35 @@ export default function AddTaskDialog(props: AddTaskDialogProps) {
   const inputClass = "mt-1 w-full px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring";
 
   useEffect(() => {
-    // If team members were passed as a prop, always use them
-    // whenever they update
+    // keep any provided users visible immediately
     if (propUsers && propUsers.length > 0) {
       setUsers(propUsers);
-      return;
     }
-    
-    // only fetch all users from Firestore if no users
-    // were provided and we don't have them yet
-    if (users.length === 0 && (!propUsers || propUsers.length === 0)) {
-      (async () => {
-        try {
-          const usersSnap = await getDocs(collection(db, 'users'));
-          const allUsers = usersSnap.docs.map(
-            (d) => ({ ...d.data(), uid: d.id } as UserProfile)
-          );
-          setUsers(allUsers);
-        } catch (err) {
-          console.error('Failed to load users for assignee list', err);
+
+    // fetch all assignees once so dropdown includes everyone
+    if (!open || hasFetchedAllUsers) return;
+
+    (async () => {
+      try {
+        const usersSnap = await getDocs(collection(db, 'users'));
+        const allUsers = usersSnap.docs.map(
+          (d) => ({ ...d.data(), uid: d.id } as UserProfile)
+        );
+        const merged = [...allUsers];
+        if (propUsers && propUsers.length > 0) {
+          for (const u of propUsers) {
+            if (!merged.some(existing => existing.uid === u.uid)) {
+              merged.push(u);
+            }
+          }
         }
-      })();
-    }
-  }, [propUsers, users.length]);
+        setUsers(merged);
+        setHasFetchedAllUsers(true);
+      } catch (err) {
+        console.error('Failed to load users for assignee list', err);
+      }
+    })();
+  }, [open, propUsers, hasFetchedAllUsers]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

@@ -36,6 +36,10 @@ export interface Task {
    * future filtering.
    */
   creatorId?: string;
+  /**
+   * Whether this task is starred by the user. Defaults to false.
+   */
+  starred?: boolean;
 }
 
 export interface Column {

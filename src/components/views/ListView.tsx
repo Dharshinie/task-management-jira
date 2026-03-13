@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
-import { Trash2, ArrowUpDown, Filter, ChevronUp, ChevronDown, Minus, Plus, CheckSquare } from 'lucide-react';
+import { Trash2, ArrowUpDown, Filter, ChevronUp, ChevronDown, Minus, Plus, CheckSquare, Star } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface ListViewProps {
   tasks: Task[];
   onDeleteTask: (id: string) => void;
   onUpdateStatus: (id: string, status: TaskStatus) => void;
+  onAddTask?: () => void;
+  onToggleStar?: (id: string) => void;
+  showStarredOnly?: boolean;
   openFiltersOnLoad?: boolean;
 }
 
@@ -53,7 +56,15 @@ function StatusBadge({ status }: { status: TaskStatus }) {
   }
 }
 
-export default function ListView({ tasks, onDeleteTask, onUpdateStatus, openFiltersOnLoad = false }: ListViewProps) {
+export default function ListView({
+  tasks,
+  onDeleteTask,
+  onUpdateStatus,
+  onAddTask,
+  onToggleStar,
+  showStarredOnly = false,
+  openFiltersOnLoad = false,
+}: ListViewProps) {
   const [sortKey, setSortKey] = useState<SortKey>('dueDate');
   const [sortAsc, setSortAsc] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -79,6 +90,7 @@ export default function ListView({ tasks, onDeleteTask, onUpdateStatus, openFilt
   const uniqueAssignees = Array.from(new Set(tasks.map(t => t.assignee)));
 
   const filtered = tasks.filter(t => {
+    if (showStarredOnly && !t.starred) return false;
     if (statusFilter !== 'all' && t.status !== statusFilter) return false;
     if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
     if (assigneeFilter !== 'all' && t.assignee !== assigneeFilter) return false;
@@ -111,7 +123,7 @@ export default function ListView({ tasks, onDeleteTask, onUpdateStatus, openFilt
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-foreground">List</h2>
+        <h2 className="text-xl font-semibold text-foreground">{showStarredOnly ? 'Starred' : 'List'}</h2>
         <div className="relative" ref={filterRef}>
           <button
             onClick={() => setFilterOpen(!filterOpen)}
@@ -180,6 +192,7 @@ export default function ListView({ tasks, onDeleteTask, onUpdateStatus, openFilt
                   </button>
                 </th>
               ))}
+              <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground w-10">Star</th>
               <th className="w-10" />
             </tr>
           </thead>
@@ -209,6 +222,17 @@ export default function ListView({ tasks, onDeleteTask, onUpdateStatus, openFilt
                   <PriorityIcon priority={task.priority} />
                 </td>
                 <td className="px-4 py-3">
+                  <button
+                    onClick={() => onToggleStar?.(task.id)}
+                    className={`p-1 rounded transition-colors ${
+                      task.starred ? 'text-amber-500 hover:text-amber-600' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    aria-label={task.starred ? 'Unstar task' : 'Star task'}
+                  >
+                    <Star className={`w-4 h-4 ${task.starred ? 'fill-current' : ''}`} />
+                  </button>
+                </td>
+                <td className="px-4 py-3">
                   <button onClick={() => onDeleteTask(task.id)} className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -222,7 +246,10 @@ export default function ListView({ tasks, onDeleteTask, onUpdateStatus, openFilt
         )}
       </div>
 
-      <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors pl-1">
+      <button
+        onClick={() => onAddTask?.()}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors pl-1"
+      >
         <Plus className="w-4 h-4" />
         Add item
       </button>
